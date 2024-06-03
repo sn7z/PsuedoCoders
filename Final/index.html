@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume Screening AI Base System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-image: url('js.jpg');
+            background-repeat: no-repeat;
+            background-size: cover;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            border-style: solid;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 50px 100px 50px 100px;
+            background-color: lightblue;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+        h1{
+            border-style: solid;
+            border-color: darkgreen;
+            text-align: center;
+            padding: 10px;
+            background-color: #45a049;
+            color: white;
+        }
+        h2{
+            color: #4CAF50;
+        }
+        .resume{
+            margin-right: 400px;
+            border-style: solid;
+            border-color: gray;
+            padding-left: 20px;
+            text-align: center;
+        }
+        p {
+            color: #555;
+            margin: 10px 0;
+        }
+
+        input[type="file"] {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+        }
+        input[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        input[type="submit"]:hover {
+            background-color: #45a049;
+        }
+        hr {
+            border: none;
+            border-top: 1px solid;
+            margin: 20px 0;
+        }
+
+        .option{
+            border-style: solid;
+            border-color: gray;
+            padding-left: 20px;
+            margin-right: 400px;
+            text-align: center;
+        }
+        .or{
+            margin-left: 200px;
+        }
+
+        .info-section {
+            display: none;
+        }
+        .info-section.visible {
+            display: block;
+        }
+        .info-section h2 {
+            color: #4CAF50;
+            margin-top: 20px;
+        }
+        .info-section p {
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .info-section ul {
+            margin-top: 10px;
+            padding-left: 20px;
+        }
+        .info-section ul li {
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Resume Screening AI Base System</h1>
+        <p><b>The system supports TXT & PDF files to be uploaded and it will work on the following...</b></p>
+        <ul>
+            <li>Resume Categorization</li>
+            <li>Resume Job Recommendation</li>
+            <li>Resume Parsing (Information extraction)</li>
+        </ul><br>
+
+        <div class="resume">
+            <h2>Upload Your Resume</h2>
+            <form id="resumeForm" enctype="multipart/form-data">
+                <input type="file" id="resumeFile" accept=".txt, .pdf"><br>
+                <input type="submit" value="Upload Resume"><br><br>
+            </form>
+        </div>
+
+        <div class="or"><p><b>(OR)</b></p></div>
+
+        <div class="option">
+            <h2>Enter Here Manually</h2>
+            <form action="#">
+                <b>Full Name:</b> <input type="text"><br><br>
+                <b>Date of Birth:</b> <input type="datetime-local"> <br><br>
+                <b>Gender:</b> <input type="radio" name="gender" value="male">Male <input type="radio" name="gender" value="female">Female <br><br>
+                <b>Contact No:</b> <input type="text"><br><br>
+                <b>Email ID:</b> <input type="email"><br><br>
+                <b>Work Experience:</b><br><textarea rows="10" cols="50"></textarea> <br><br>
+                <input type="submit" value="Submit">
+            </form>
+        </div>
+
+        <hr>
+
+        <div id="resumeInfo" class="info-section">
+            <h2>Extracted Information</h2>
+            <p><b>Name:</b> <span id="name"></span></p>
+            <p><b>Phone No.:</b> <span id="phone"></span></p>
+            <p><b>Email:</b> <span id="email"></span></p>
+            <p><b>Skills:</b></p>
+            <ul id="skills"></ul>
+            <p><b>Education:</b></p>
+            <ul id="education"></ul>
+            <p><b>Text File:</b> <a id="textFileLink" href="#" target="_blank">Download</a></p>
+        </div>
+
+        <div id="suggestionInfo" class="info-section">
+            <h2>Suggestions for the Candidate</h2>
+            <p id="suggestion"></p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('resumeForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            var fileInput = document.getElementById('resumeFile');
+            var file = fileInput.files[0];
+
+            if (!file) {
+                alert("Please upload a file.");
+                return;
+            }
+
+            var formData = new FormData();
+            formData.append('resume', file);
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+
+                document.getElementById('name').textContent = data.name || "N/A";
+                document.getElementById('phone').textContent = data.contact_number || "N/A";
+                document.getElementById('email').textContent = data.email || "N/A";
+
+                var skillsList = document.getElementById('skills');
+                skillsList.innerHTML = "";
+                (data.skills || []).forEach(function(skill) {
+                    var li = document.createElement('li');
+                    li.textContent = skill;
+                    skillsList.appendChild(li);
+                });
+
+                var educationList = document.getElementById('education');
+                educationList.innerHTML = "";
+                (data.education || []).forEach(function(education) {
+                    var li = document.createElement('li');
+                    li.textContent = education;
+                    educationList.appendChild(li);
+                });
+
+                var textFileLink = document.getElementById('textFileLink');
+                textFileLink.href = `/download/${data.text_file.split('/').pop()}`;
+                textFileLink.textContent = 'Download Text File';
+
+                document.getElementById('suggestion').textContent = data.suggestion || "No suggestion available";
+
+                document.getElementById('resumeInfo').classList.add('visible');
+                document.getElementById('suggestionInfo').classList.add('visible');
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    </script>
+</body>
+</html>
